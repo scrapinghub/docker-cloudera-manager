@@ -1,5 +1,7 @@
 FROM ubuntu:14.04
 ENV DEBIAN_FRONTEND noninteractive
+WORKDIR /app
+ENTRYPOINT ["/app/entry"]
 
 # Accept oracle license in debconf
 ADD java7.debconf /tmp/java7.debconf
@@ -21,3 +23,5 @@ RUN apt-get update -qq \
     && apt-get update -qq \
     && apt-get install -y cloudera-manager-daemons cloudera-manager-server libmysql-java \
     && rm -rf /var/lib/apt/lists
+
+COPY . /app
