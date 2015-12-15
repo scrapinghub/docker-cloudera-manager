@@ -1,0 +1,29 @@
+#!/bin/bash
+set -x
+action=$1
+shift
+
+logdir=/var/log/cloudera-scm-server/
+logfile=$logdir/cloudera-scm-server.log
+db_config_file=/etc/cloudera-scm-server/db.properties
+
+start_cm_server() {
+  if [[ "$CM_DB_CONFIG" != "" ]]; then
+      cp -f $CM_DB_CONFIG $db_config_file
+      chown cloudera-scm:clouder-scm $db_config_file
+  fi
+  mkdir -p $logdir
+  touch $logfile
+  chown -R cloudera-scm:clouder-scm $logdir
+  service cloudera-scm-server start
+  tail -F $logdir/cloudera-scm-server.log
+}
+
+case $action in
+  start)
+    start_cm_server
+    ;;
+  *)
+    exec $action "$@"
+    ;;
+esac
