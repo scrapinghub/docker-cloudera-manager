@@ -12,6 +12,6 @@ docker run -it --rm \
     --name cm \
 	-v $PWD/db.properties:/mnt/mesos/sandbox/db.properties \
     -e CM_DB_CONFIG=/mnt/mesos/sandbox/db.properties \
-    scrapinghub/cloudera-manager:5.4
+    scrapinghub/cloudera-manager:5.5.3
     start
 ```
