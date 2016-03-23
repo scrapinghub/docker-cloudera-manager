@@ -12,7 +12,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7B2C3B0889BF5709A10
 
 RUN cat /tmp/java7.debconf |debconf-set-selections
 
-ENV CM_VERSION=5.4.6-1.cm546.p0.8~trusty-cm5
+ENV CM_VERSION=5.6.0-1.cm560.p0.54~trusty-cm5
 
 # Install Oracle Java7
 RUN apt-get update -qq \
