@@ -1,29 +1,33 @@
-FROM ubuntu:14.04
-ENV DEBIAN_FRONTEND noninteractive
-WORKDIR /app
-ENTRYPOINT ["/app/entry"]
+FROM ubuntu:18.04
+LABEL MAINTAINER=root@scrapinghub.com
 
-# Accept oracle license in debconf
-ADD java7.debconf /tmp/java7.debconf
-# Add webupdate8 apt repo
-ADD java7.list /etc/apt/sources.list.d/java7.list
-# Add webupdate8 signing key
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7B2C3B0889BF5709A105D03AC2518248EEA14886
+ENV DEBIAN_FRONTEND=noninteractive \
+    CM_MAJOR_VERSION=6 \
+    CM_MINOR_VERSION=3 \
+    CM_PATCH_VERSION=1
 
-RUN cat /tmp/java7.debconf |debconf-set-selections
+ENV CM_VERSION=${CM_MAJOR_VERSION}.${CM_MINOR_VERSION}.${CM_PATCH_VERSION}
+ENV CLOUDERA_BASE_URL=https://archive.cloudera.com/cm${CM_MAJOR_VERSION}/${CM_VERSION}/ubuntu1804/apt/
 
-ENV CM_VERSION=5.4.6-1.cm546.p0.8~trusty-cm5
+# Install Java8(OpenJDK), MySQL JDBC driver and configure Cloudera Repo
+RUN apt-get update &&\
+    apt-get install --quiet --no-install-recommends --yes \
+        wget \
+        gnupg2 \
+        ca-certificates \
+        openjdk-8-jdk \
+        libmysql-java &&\
+    wget -q ${CLOUDERA_BASE_URL}/cloudera-manager.list -P /etc/apt/sources.list.d &&\
+    wget -q ${CLOUDERA_BASE_URL}/archive.key -O - | apt-key add - &&\
+    rm -rf /var/lib/apt/lists/*
 
-# Install Oracle Java7
-RUN apt-get update -qq \
-    && apt-get install -qy oracle-java7-installer curl libmysql-java \
-    && rm -f /var/cache/oracle-jdk7-installer/jdk*tar.gz \
-    && ln -sf java-7-oracle /usr/lib/jvm/default-java \
-    && apt-get purge -y openjdk-\* icedtea-\* icedtea6-\* \
-    && cd /tmp/ \
-    && wget -q http://archive.cloudera.com/cm5/ubuntu/trusty/amd64/cm/pool/contrib/e/enterprise/cloudera-manager-server_${CM_VERSION}_all.deb \
-    && wget -q http://archive.cloudera.com/cm5/ubuntu/trusty/amd64/cm/pool/contrib/e/enterprise/cloudera-manager-daemons_${CM_VERSION}_all.deb \
-    && dpkg -i /tmp/*.deb \
-    && rm -rf /var/lib/apt/lists /tmp/*.deb
+# Install cloudera-manager-{server,daemons}
+RUN apt-get update &&\
+    apt-get install --quiet --yes cloudera-manager-daemons cloudera-manager-server &&\
+    rm -rf /var/lib/apt/lists/*
 
-COPY . /app
+EXPOSE 7180 7182
+
+COPY ./docker-entrypoint.sh /
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["start"]
